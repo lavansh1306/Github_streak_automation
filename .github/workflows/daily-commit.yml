@@ -1,0 +1,39 @@
+name: Daily Repository Maintenance
+
+on:
+  # Run once per day at 00:00 UTC.
+  schedule:
+    - cron: '0 0 * * *'
+  # Allow a manual run from the Actions tab.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  maintain-repository:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Fetch the repository so the activity log can be updated.
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Update activity log
+        run: echo "$(date -u +'%Y-%m-%d') Daily repository maintenance completed." >> activity.txt
+
+      # Configure the bot identity used for the automated commit.
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push changes
+        run: |
+          git add activity.txt
+          if git diff --cached --quiet -- activity.txt; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: daily repository maintenance"
+          git push
