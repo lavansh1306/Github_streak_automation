@@ -1,12 +1,14 @@
 name: Daily Repository Maintenance
 
 on:
-  # Run once per day at 00:00 UTC.
+  # Run once per day at 00:00 UTC (5:30 AM IST).
   schedule:
     - cron: '0 0 * * *'
+
   # Allow a manual run from the Actions tab.
   workflow_dispatch:
 
+# Allow the workflow to push changes to the repository.
 permissions:
   contents: write
 
@@ -19,21 +21,27 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # Add today's maintenance entry.
       - name: Update activity log
-        run: echo "$(date -u +'%Y-%m-%d') Daily repository maintenance completed." >> activity.txt
+        run: |
+          echo "$(date -u +'%Y-%m-%d') Daily repository maintenance completed." >> activity.txt
 
-      # Configure the bot identity used for the automated commit.
+      # Configure Git with your GitHub-associated email
+      # so the commit can be attributed to your account.
       - name: Configure Git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Lavansh Choubey"
+          git config user.email "lavansh1201a@gmail.com"
 
+      # Commit and push the update.
       - name: Commit and push changes
         run: |
           git add activity.txt
+
           if git diff --cached --quiet -- activity.txt; then
             echo "No changes to commit."
             exit 0
           fi
+
           git commit -m "chore: daily repository maintenance"
           git push
